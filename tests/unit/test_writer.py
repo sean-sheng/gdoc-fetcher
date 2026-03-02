@@ -2,6 +2,8 @@
 import pytest
 from pathlib import Path
 from gdoc_fetch.writer import sanitize_filename, create_frontmatter
+import tempfile
+import shutil
 
 
 def test_sanitize_filename_basic():
@@ -190,3 +192,42 @@ def test_create_frontmatter_backslashes():
     # Should escape backslashes
     assert "\\\\" in result
     assert 'title: "Path\\\\to\\\\document"' in result
+
+
+def test_write_document(tmp_path):
+    """Test writing document with frontmatter."""
+    from gdoc_fetch.writer import write_document
+
+    output_dir = tmp_path / "output"
+    markdown_content = "# Test\n\nSome content."
+
+    result_path = write_document(
+        title="Test Doc",
+        source_url="https://docs.google.com/document/d/123/edit",
+        markdown=markdown_content,
+        output_dir=str(output_dir)
+    )
+
+    assert Path(result_path).exists()
+    content = Path(result_path).read_text()
+    assert 'title: "Test Doc"' in content
+    assert "# Test" in content
+    assert "Some content." in content
+
+
+def test_write_document_creates_directory(tmp_path):
+    """Test that write_document creates output directory."""
+    from gdoc_fetch.writer import write_document
+
+    output_dir = tmp_path / "output"
+    assert not output_dir.exists()
+
+    write_document(
+        title="Test",
+        source_url="https://example.com",
+        markdown="content",
+        output_dir=str(output_dir)
+    )
+
+    assert output_dir.exists()
+    assert (output_dir / "test").exists()

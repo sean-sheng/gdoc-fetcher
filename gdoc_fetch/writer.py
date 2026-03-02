@@ -97,3 +97,37 @@ fetched: {date}
 ---
 
 """
+
+
+def write_document(
+    title: str,
+    source_url: str,
+    markdown: str,
+    output_dir: str = "./output"
+) -> str:
+    """
+    Write document to markdown file with frontmatter.
+
+    Args:
+        title: Document title
+        source_url: Original Google Doc URL
+        markdown: Markdown content
+        output_dir: Base output directory
+
+    Returns:
+        Path to written file
+    """
+    # Create document directory
+    safe_name = sanitize_filename(title)
+    doc_dir = Path(output_dir) / safe_name
+    doc_dir.mkdir(parents=True, exist_ok=True)
+
+    # Prepare content with frontmatter
+    frontmatter = create_frontmatter(title, source_url)
+    full_content = frontmatter + markdown
+
+    # Write file
+    output_path = doc_dir / f"{safe_name}.md"
+    output_path.write_text(full_content, encoding='utf-8')
+
+    return str(output_path)
