@@ -99,6 +99,27 @@ fetched: {date}
 """
 
 
+def replace_image_placeholders(markdown: str, image_map: Dict[str, str]) -> str:
+    """
+    Replace image placeholder IDs with local paths.
+
+    Args:
+        markdown: Markdown content with placeholders like INLINE_OBJECT_kix.abc123
+        image_map: Mapping of object_id -> local filename
+
+    Returns:
+        Markdown with local image paths
+    """
+    result = markdown
+
+    for object_id, filename in image_map.items():
+        placeholder = f"INLINE_OBJECT_{object_id}"
+        local_path = f"./images/{filename}"
+        result = result.replace(f"![]({placeholder})", f"![]({local_path})")
+
+    return result
+
+
 def write_document(
     title: str,
     source_url: str,

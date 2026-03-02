@@ -231,3 +231,39 @@ def test_write_document_creates_directory(tmp_path):
 
     assert output_dir.exists()
     assert (output_dir / "test").exists()
+
+
+def test_replace_image_placeholders():
+    """Test replacing image placeholders with local paths."""
+    from gdoc_fetch.writer import replace_image_placeholders
+
+    markdown = """
+# Document
+
+![](INLINE_OBJECT_kix.abc123)
+
+Some text.
+
+![](INLINE_OBJECT_kix.def456)
+"""
+
+    image_map = {
+        "kix.abc123": "image-001.png",
+        "kix.def456": "image-002.jpg"
+    }
+
+    result = replace_image_placeholders(markdown, image_map)
+
+    assert "![](./images/image-001.png)" in result
+    assert "![](./images/image-002.jpg)" in result
+    assert "INLINE_OBJECT" not in result
+
+
+def test_replace_image_placeholders_no_images():
+    """Test markdown without images passes through unchanged."""
+    from gdoc_fetch.writer import replace_image_placeholders
+
+    markdown = "# Just text\n\nNo images here."
+    result = replace_image_placeholders(markdown, {})
+
+    assert result == markdown
