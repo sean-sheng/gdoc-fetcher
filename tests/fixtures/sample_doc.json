@@ -1,0 +1,18 @@
+{
+  "title": "Test Document",
+  "body": {
+    "content": [
+      {
+        "paragraph": {
+          "elements": [
+            {
+              "textRun": {
+                "content": "Simple paragraph.\n"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
