@@ -1,6 +1,7 @@
 """Google API clients for Docs and Drive."""
-from typing import Dict, Any
+from typing import Dict, Any, List
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from google.oauth2.credentials import Credentials
 
 from gdoc_fetch.models import Document, InlineObject
@@ -61,3 +62,71 @@ class DocsClient:
                 )
 
         return result
+
+    def create_document(self, title: str) -> str:
+        """
+        Create a new Google Doc.
+
+        Args:
+            title: Document title
+
+        Returns:
+            Document ID of created document
+
+        Raises:
+            ValueError: If API request fails with permission error
+            HttpError: For other API errors
+        """
+        try:
+            body = {'title': title}
+            doc = self.service.documents().create(body=body).execute()
+            return doc['documentId']
+
+        except HttpError as e:
+            if e.resp.status == 403:
+                raise ValueError("Permission denied. Check authentication and API access.")
+            elif e.resp.status == 404:
+                raise ValueError("Docs API not found. Ensure API is enabled.")
+            else:
+                raise
+
+    def update_document_content(self, doc_id: str, requests: List[Dict]) -> None:
+        """
+        Apply batch updates to document content.
+
+        Args:
+            doc_id: Document ID
+            requests: List of batchUpdate request dicts
+
+        Raises:
+            ValueError: If API request fails
+            HttpError: For API errors
+        """
+        if not requests:
+            return
+
+        try:
+            self.service.documents().batchUpdate(
+                documentId=doc_id,
+                body={'requests': requests}
+            ).execute()
+
+        except HttpError as e:
+            if e.resp.status == 403:
+                raise ValueError("Permission denied. Cannot update document.")
+            elif e.resp.status == 404:
+                raise ValueError(f"Document not found: {doc_id}")
+            else:
+                raise
+
+    def get_document_url(self, doc_id: str) -> str:
+        """
+        Get Google Docs edit URL from document ID.
+
+        Args:
+            doc_id: Document ID
+
+        Returns:
+            Full edit URL for the document
+        """
+        return f"https://docs.google.com/document/d/{doc_id}/edit"
