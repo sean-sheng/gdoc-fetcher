@@ -6,3 +6,7 @@ dist/
 build/
 .venv/
 output/
+.DS_Store
+*.log
+venv/
+verify-upload/

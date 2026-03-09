@@ -1,21 +1,23 @@
 ---
 name: gdoc-skill
-description: gdoc-fetch and gdoc-upload. Fetch Google Docs to Markdown (with images) or upload Markdown to new Google Docs. Use when user provides a Google Docs URL to read/save as Markdown, or when user wants to create a Google Doc from a Markdown file.
+description: gdoc-fetch and gdoc-upload. Fetch Google Docs to Markdown (with images) or upload Markdown to new Google Docs. Supports batch download from markdown files and recursive link following. Use when user provides a Google Docs URL to read/save as Markdown, or when user wants to create a Google Doc from a Markdown file.
 ---
 
 # Google Docs ↔ Markdown (gdoc-fetch & gdoc-upload)
 
-**gdoc-fetch:** Fetch Google Docs and convert to Markdown with images.  
+**gdoc-fetch:** Fetch Google Docs and convert to Markdown with images. Supports batch download and recursive link following.
 **gdoc-upload:** Upload Markdown files to create new Google Docs with formatting and images.
 
 ## When to Use This Tool
 
 Use **gdoc-fetch** when the user:
 - Provides a Google Docs URL (e.g., `https://docs.google.com/document/d/.../edit`)
+- Provides a markdown file containing multiple Google Docs URLs to batch download
 - Asks you to read, review, or analyze a Google Doc
 - Wants to import documentation, specifications, or requirements from Google Docs
 - Needs to convert a Google Doc to Markdown format
 - Wants to save a Google Doc locally with all its images
+- Wants to download a document and all linked Google Docs recursively
 
 Use **gdoc-upload** when the user:
 - Wants to create a Google Doc from a Markdown file
@@ -26,14 +28,29 @@ Use **gdoc-upload** when the user:
 
 ### gdoc-fetch — Fetch a Google Doc to Markdown
 
+**Single Document:**
 ```bash
 gdoc-fetch "<google-doc-url>" --output-dir <project-dir>/docs
 ```
 
+**Batch Download from File:**
+```bash
+gdoc-fetch --file urls.md --output-dir <project-dir>/docs
+```
+
+**Recursive Download (follow links):**
+```bash
+gdoc-fetch "<google-doc-url>" --recursive --max-depth 2
+gdoc-fetch --file urls.md --recursive --max-depth 2
+```
+
 **Options:**
-- `url` (required): Google Docs URL or document ID
-- `--output-dir`: Output directory (default: `./output`)
+- `url`: Google Docs URL or document ID (for single document mode)
+- `--file`: Markdown file containing Google Docs URLs to batch download
+- `--output-dir`: Output directory (default: `./output`). Files are saved to a timestamped subfolder
 - `--no-images`: Skip downloading images (faster, but document won't include images)
+- `--recursive`: Recursively download linked Google Docs (default depth: 1)
+- `--max-depth`: Maximum recursion depth for following links (default: 1, use 0 to disable)
 
 ### gdoc-upload — Upload Markdown to a new Google Doc
 
@@ -75,17 +92,24 @@ When the user provides a Google Docs URL:
 
 ## Output Structure
 
-The tool creates a well-organized directory structure:
+The tool creates a well-organized directory structure with timestamp-based organization:
 
 ```
-docs/
-└── document-name/           # Sanitized document title
-    ├── document-name.md     # Main markdown file with frontmatter
-    └── images/              # All embedded images
-        ├── image-001.png
-        ├── image-002.jpg
-        └── ...
+output/
+└── 2026-03-08_14-30-45/        # Execution timestamp
+    ├── document-name/          # Sanitized document title
+    │   ├── document-name.md    # Main markdown file with frontmatter
+    │   └── images/             # All embedded images
+    │       ├── image-001.png
+    │       ├── image-002.jpg
+    │       └── ...
+    └── another-document/       # Additional documents (batch mode)
+        ├── another-document.md
+        └── images/
+            └── ...
 ```
+
+**Note:** Each execution creates a new timestamped subfolder to keep downloads organized by session.
 
 ### Markdown File Format
 
@@ -150,7 +174,32 @@ gdoc-fetch "https://docs.google.com/document/d/1abc123xyz/edit"
 gdoc-fetch "1abc123xyz"
 ```
 
-### Example 5: Upload Markdown to Google Docs
+### Example 5: Batch Download from Markdown File
+
+```
+User: "Download all the docs listed in urls.md"
+
+Actions:
+1. Run: gdoc-fetch --file urls.md --output-dir ./docs
+2. Tool extracts all Google Docs URLs from the markdown file
+3. Downloads each document to ./docs/YYYY-MM-DD_HH-MM-SS/
+4. Respond: "Downloaded 5 documents to ./docs/2026-03-08_14-30-45/"
+```
+
+### Example 6: Recursive Download (Follow Links)
+
+```
+User: "Download this doc and all the docs it links to"
+
+Actions:
+1. Run: gdoc-fetch "<url>" --recursive --max-depth 2 --output-dir ./docs
+2. Tool downloads the initial document
+3. Extracts all Google Docs links from the document
+4. Recursively downloads linked documents up to max-depth
+5. Respond: "Downloaded 8 documents (1 initial + 7 linked) to ./docs/2026-03-08_14-30-45/"
+```
+
+### Example 7: Upload Markdown to Google Docs
 
 ```
 User: "Turn docs/spec.md into a Google Doc and share the link"
