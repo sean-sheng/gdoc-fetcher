@@ -138,10 +138,22 @@ pip3 install -e ".[dev]"
 ### Run Tests
 
 ```bash
-PYTHONPATH=. pytest tests/ -v
+# Quick way - run unit tests only (fast)
+./run_tests.sh
 
-# Expected: 121 tests passed
+# Or use pytest directly
+pytest tests/unit/ -v
+
+# Run integration tests (requires authentication)
+./run_tests.sh integration
+
+# Run all tests
+./run_tests.sh all
+
+# Expected: 121 unit tests + 20 integration tests
 ```
+
+See [tests/integration/README.md](tests/integration/README.md) for integration test details.
 
 ### Project Structure
 

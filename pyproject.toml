@@ -28,5 +28,10 @@ gdoc-upload = "gdoc_fetch.cli_upload:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+]
+# Run unit tests by default, skip integration unless explicitly requested
+addopts = "-v -m 'not integration'"
 python_files = "test_*.py"
 python_functions = "test_*"
